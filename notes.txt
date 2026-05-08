@@ -41,6 +41,45 @@ changed cat cols types to category
 ------------------------------------------------
 
 eda python:
+cat features
+only 11.6% of our data is a yes in y column
+in job, we get most yeses in retired and student 
+in martial single is with the most yes
+in education tertiary has the most yes
+in default category no has the most yes
+in housing, no has the most yes
+in loan, no has the most yes
+in contact, missing has the least yes 
+in month, dec, and mar have the most yes
+in poutcome, success has the most yes
+
+numerical features 
+for age, we have a higher max and std in yes, but median the same
+in balance, bigger IQR, higher median, higher max for yes
+in day, the distribution is the same
+in duration, we have a bigger IQR, bigger mdeian, and higher max for yes
+in campaign, it is the same
+in pdays, we have a higher and bigger IQR and max in yes
+in previous, have a bigger and higher IQR and max in yes
+in prev_contacted, higher and bigger IQR and max in yes
+
+in heatmap, duration had the higher corr with +0.4 with target
+we observed by increasing duration, subscription tends to increase regardless of the age
+prev_contacted has corr of +0.87 with pdays
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ------------------------------------------------
 
