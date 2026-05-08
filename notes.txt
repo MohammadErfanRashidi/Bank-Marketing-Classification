@@ -37,9 +37,10 @@ created a flag for previously contacted customers, 0 not contacted, 1 contacted
 dropped missing values of job and education 
 replaced missing values of contact and poutcome with missing
 dropped rows where duration was 0
+changed cat cols types to category
 ------------------------------------------------
 
-eda python and sql:
+eda python:
 
 ------------------------------------------------
 
