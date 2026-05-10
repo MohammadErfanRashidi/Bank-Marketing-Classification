@@ -6,7 +6,7 @@ import pandas as pd
 @st.cache_resource
 def load_models():
     scaler = joblib.load('models/scaler.pkl')
-    classifier = joblib.load('models/model.pkl')
+    classifier = joblib.load('models/random_forest_model.pkl')
     return scaler, classifier
 
 scaler, classifier = load_models()
@@ -30,7 +30,7 @@ with tab_single:
 
         month = st.selectbox(
             'Last Contact Month',
-            options = ['jan', 'feg', 'mar', 'apr', 'may', 'jun',
+            options = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
                        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'],
             index = 2
         )
@@ -61,7 +61,7 @@ with tab_single:
 
         duration = st.number_input(
             'Last Contact Duration (seconds)',
-            min_value = 0, values = 100, step = 1
+            min_value = 0, value = 100, step = 1
         )
 
     pdays_replaced_feat = 999 if pdays == -1 else pdays
@@ -99,7 +99,6 @@ with tab_single:
         st.success('The client is likely to **subscribe**')
     else:
         st.error('The client is likely **not to subscribe**')
-    st.info(f'Predicted probability of subscription: {proba:.2f}')
 
 
 
@@ -129,8 +128,8 @@ with tab_batch:
 
         df_out = df_input.copy()
 
-        df_out['poutcome_success_feat'] = df_out['poutcome'].isin(['success']).astype
-        df_out['month_dec_oct_sep_mar_feat'] = df_out['month'].isin(['dec', 'oct', 'sep', 'mar'])
+        df_out['poutcome_success_feat'] = df_out['poutcome'].isin(['success']).astype(int)
+        df_out['month_dec_oct_sep_mar_feat'] = df_out['month'].isin(['dec', 'oct', 'sep', 'mar']).astype(int)
         df_out['pdays_replaced_feat'] = df_out['pdays'].replace(-1, 999)
         df_out['contact_cellular_telephone_feat'] = df_out['contact'].isin(['cellular', 'telephone']).astype(int)
         df_out['housing_feat'] = df_out['housing'].map({'yes': 1, 'no': 0})
@@ -154,8 +153,7 @@ with tab_batch:
         X[:, 0] = scaled[:, 1]
 
         y_pred = classifier.predict(X)
-        df_out['y'] = y_pred
-        df_out['probability'] = classifier.predict_proba(X)[:, 1]
+        df_out['y_predicted'] = y_pred
 
         st.markdown('### Prediction results (first top 10 rows)')
         st.dataframe(df_out.head(10))

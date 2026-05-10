@@ -212,15 +212,6 @@ final_df.to_csv('../data/bank_final.csv', index = False)
 # Save the scaler model
 joblib.dump(scaler, '../models/scaler.pkl')
 
-
-
-
-
-
-
-
-
-
 ------------------------------------------------
 
 modeling:
