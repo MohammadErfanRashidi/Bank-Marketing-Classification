@@ -40,7 +40,7 @@ dropped rows where duration was 0
 changed cat cols types to category
 ------------------------------------------------
 
-eda python:
+eda:
 cat features
 only 11.6% of our data is a yes in y column
 in job, we get most yeses in retired and student 
@@ -63,27 +63,163 @@ in pdays, we have a higher and bigger IQR and max in yes
 in previous, have a bigger and higher IQR and max in yes
 in prev_contacted, higher and bigger IQR and max in yes
 
-in heatmap, duration had the higher corr with +0.4 with target
+in heatmap, duration had the highest corr with +0.4 with target
 we observed by increasing duration, subscription tends to increase regardless of the age
 prev_contacted has corr of +0.87 with pdays
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ------------------------------------------------
 
 feature engineering and preprocessing:
+
+# New feat for job
+df['job_student_or_retired_feat'] = df['job'].isin(['student', 'retired']).astype(int)
+
+df.drop(columns = ['job'], inplace = True)
+
+df.groupby('job_student_or_retired_feat')['y'].mean()
+
+df['marital_single_feat'] = df['marital'].isin(['single']).astype(int)
+
+df.drop(columns = ['marital'], inplace = True)
+
+df.groupby('marital_single_feat')['y'].mean()
+
+df['education_tertiary_feat'] = df['education'].isin(['tertiary']).astype(int)
+
+df.drop(columns = ['education'], inplace = True)
+
+df.groupby('education_tertiary_feat')['y'].mean()
+
+df['contact_cellular_telephone_feat'] = df['contact'].isin(['cellular', 'telephone']).astype(int)
+
+df.drop(columns = ['contact'], inplace = True)
+
+df.groupby('contact_cellular_telephone_feat')['y'].mean()
+
+df['month_dec_oct_sep_mar_feat'] = df['month'].isin(['dec', 'oct', 'sep', 'mar']).astype(int)
+
+df.drop(columns = ['month'], inplace = True)
+
+df.groupby('month_dec_oct_sep_mar_feat')['y'].mean()
+
+df['poutcome_success_feat'] = df['poutcome'].isin(['success']).astype(int)
+
+df.drop(columns = ['poutcome'], inplace = True)
+
+df.groupby('poutcome_success_feat')['y'].mean()
+
+# Encode yes and no in housing, loan, and default
+df['housing_feat'] = df['housing'].map({'yes': 1, 'no': 0})
+df.drop(columns = ['housing'], inplace = True)
+
+df['loan_feat'] = df['loan'].map({'yes': 1, 'no': 0})
+df.drop(columns = ['loan'], inplace = True)
+
+df['default_feat'] = df['default'].map({'yes': 1, 'no': 0})
+df.drop(columns = ['default'], inplace = True)
+
+df['duration_bin'] = pd.cut(df['duration'],
+                                 bins = [0, 103, 180, 318, np.inf],
+                                 labels = ['Q1', 'Q2', 'Q3', 'Q4'])
+
+df['duration_bin_Q3_Q4_feat'] = df['duration_bin'].isin(['Q3', 'Q4']).astype(int)
+
+df.drop(columns = ['duration_bin'], inplace = True)
+
+df.groupby('duration_bin_Q3_Q4_feat')['y'].mean()
+
+df['age_bin'] = pd.cut(df['age'],
+                       bins = [18, 33, 39, 48, 95],
+                       labels = ['Q1', 'Q2', 'Q3', 'Q4'])
+
+df.groupby('age_bin')['y'].mean()
+
+df.drop(columns = ['age', 'age_bin_feat'], inplace = True)
+
+df['previous_any_feat'] = (df['previous'] > 0).astype(int)
+
+df.groupby('previous_any_feat')['y'].mean()
+
+df['day_bin_feat'] = pd.cut(df['day'],
+                       bins = [1, 8, 16, 21, 31],
+                       labels = ['Q1', 'Q2', 'Q3', 'Q4'])
+
+df.groupby('day_bin_feat')['y'].mean()
+
+# Also the same for day because it does not have any effect
+df.drop(columns = ['day', 'day_bin_feat'], inplace = True)
+
+df['campaign_bin_feat'] = (df['campaign'] > 3).astype(int)
+
+df.drop(columns = ['campaign'], inplace = True)
+
+df.groupby('campaign_bin_feat')['y'].mean()
+
+df['pdays_replaced_feat'] = df['pdays'].replace(-1, 999)
+
+df['log_balance'] = np.log(df['balance'] - df['balance'].min() + 1)
+df['log_duration_feat'] = np.log(df['duration'] - df['duration'].min() + 1)
+
+# Create the features columns 
+features = df.drop(columns = ['y']).columns.tolist()
+
+# Get their asb corr with y
+corr = df.corr()['y'].drop('y').abs().sort_values(ascending = False)
+
+# Select corrs above 0.1 for our candidates
+selected = corr[corr > 0.1].index.tolist()
+
+X_selected = df[selected]
+
+# Now check for corr among the selected features
+# Find pairs with abs corr above 0.7
+# Remove the one in the pair that has a lower corr with y
+corr_matrix = X_selected.corr().abs()
+
+features_to_drop = set()
+
+target_corr_selected = corr[selected]
+
+for i in range(len(corr_matrix.columns)):
+    for j in range(i):
+        if corr_matrix.iloc[i, j] > 0.7:
+            feat_i = corr_matrix.columns[i]
+            feat_j = corr_matrix.columns[j]
+
+            if target_corr_selected[feat_i] >= target_corr_selected[feat_j]:
+                features_to_drop.add(feat_j)
+            else:
+                features_to_drop.add(feat_i)
+
+final_features = [f for f in selected if f not in features_to_drop]
+
+# Create the new dataset and add y to it
+final_df = df[final_features]
+
+final_df['y'] = df['y'].values
+
+scaler:
+
+continuos_cols = ['duration', 'pdays_replaced_feat']
+
+scaler = RobustScaler()
+
+final_df[continuos_cols] = scaler.fit_transform(final_df[continuos_cols])
+
+# Save the new dataset
+final_df.to_csv('../data/bank_final.csv', index = False)
+
+# Save the scaler model
+joblib.dump(scaler, '../models/scaler.pkl')
+
+
+
+
+
+
+
+
+
 
 ------------------------------------------------
 
