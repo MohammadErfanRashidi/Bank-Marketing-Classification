@@ -92,7 +92,6 @@ with tab_single:
     features[0, 0] = scaled_values[0, 1]
 
     prediction = classifier.predict(features)[0]
-    proba = classifier.predict_proba(features)[0, 1]
 
     st.markdown('---')
     if prediction == 1:

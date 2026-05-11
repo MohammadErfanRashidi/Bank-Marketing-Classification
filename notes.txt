@@ -198,6 +198,9 @@ final_df = df[final_features]
 
 final_df['y'] = df['y'].values
 
+these became the final columns of our dataset
+duration	poutcome_success_feat	month_dec_oct_sep_mar_feat	pdays_replaced_feat	contact_cellular_telephone_feat	housing_feat	job_student_or_retired_feat	y
+
 scaler:
 
 continuos_cols = ['duration', 'pdays_replaced_feat']
@@ -216,6 +219,170 @@ joblib.dump(scaler, '../models/scaler.pkl')
 
 modeling:
 
+split x and y
+test size of 0.15
+trained dummy for baseline model
+
+dummy:
+              precision    recall  f1-score   support
+
+           0       0.89      0.50      0.64      5726
+           1       0.12      0.50      0.19       753
+
+    accuracy                           0.50      6479
+   macro avg       0.50      0.50      0.42      6479
+weighted avg       0.80      0.50      0.59      6479
+
+0.5
+
+
+Logistic Regression
+              precision    recall  f1-score   support
+
+           0       0.97      0.83      0.90      5726
+           1       0.40      0.82      0.53       753
+
+    accuracy                           0.83      6479
+   macro avg       0.68      0.83      0.72      6479
+weighted avg       0.91      0.83      0.86      6479
+
+0.896466526489223
+
+Decision Tree
+              precision    recall  f1-score   support
+
+           0       0.98      0.69      0.81      5726
+           1       0.28      0.91      0.43       753
+
+    accuracy                           0.72      6479
+   macro avg       0.63      0.80      0.62      6479
+weighted avg       0.90      0.72      0.77      6479
+
+0.8509105967560657
+
+
+Random Forest
+              precision    recall  f1-score   support
+
+           0       0.98      0.80      0.88      5726
+           1       0.36      0.86      0.51       753
+
+    accuracy                           0.81      6479
+   macro avg       0.67      0.83      0.69      6479
+weighted avg       0.91      0.81      0.84      6479
+
+0.9060594274433296
+
+XGB
+              precision    recall  f1-score   support
+
+           0       0.98      0.77      0.87      5726
+           1       0.34      0.88      0.49       753
+
+    accuracy                           0.79      6479
+   macro avg       0.66      0.83      0.68      6479
+weighted avg       0.91      0.79      0.82      6479
+
+0.8952353352917355
+
+
+---Dummy---
+[[2889 2837]
+ [ 374  379]]
+Recall score for class 1: 0.5033
+---Logistic Regression---
+[[4781  945]
+ [ 135  618]]
+Recall score for class 1: 0.8207
+---Decision Tree---
+[[3975 1751]
+ [  67  686]]
+Recall score for class 1: 0.9110
+---Random Forest---
+[[4581 1145]
+ [ 104  649]]
+Recall score for class 1: 0.8619
+---XGBoost---
+[[4434 1292]
+ [  91  662]]
+Recall score for class 1: 0.8792
+
+
+and saved all the models 
 ------------------------------------------------
 
 deployments:
+
+created a streamlit app
+chose random forest for its peak performance 
+loaded scaler 
+
+created two tabs, one for single input and the other for file upload
+
+in single input
+we get poutcome, month, pdays, contact, housing, job and duration
+then we do feature engineering on them
+
+pdays_replaced_feat = 999 if pdays == -1 else pdays
+
+poutcome_success_feat = 1 if poutcome == 'success' else 0
+
+month_dec_oct_sep_mar_feat = 1 if month in ['dec', 'oct', 'sep', 'mar'] else 0
+
+contact_cellular_telephone_feat = 1 if contact in ['cellular', 'telephone'] else 0
+
+housing_feat = 1 if housing == 'yes' else 0
+
+job_student_or_retired_feat = 1 if job in ['student', 'retired'] else 0
+
+features = np.array([
+        duration,
+        poutcome_success_feat,
+        month_dec_oct_sep_mar_feat, 
+        pdays_replaced_feat,
+        contact_cellular_telephone_feat,
+        housing_feat,
+        job_student_or_retired_feat
+    ]).reshape(1, -1)
+    
+then we used the scaler model on duration and pdays_replaced_feature
+
+now that all features are ready, we feed it to the mdoel and display the result
+
+in batch tab:
+
+the user uploads a csv file
+we check for required columns as
+'poutcome', 'month', 'pdays', 'contact', 'housing', 'job', 'duration'
+
+if all were there, we proceed with feature engineering on the uploaded dataset
+
+first we copy the input dataset and create an output dataset
+
+df_out['poutcome_success_feat'] = df_out['poutcome'].isin(['success']).astype(int)
+
+        df_out['month_dec_oct_sep_mar_feat'] = df_out['month'].isin(['dec', 'oct', 'sep', 'mar']).astype(int)
+        
+        df_out['pdays_replaced_feat'] = df_out['pdays'].replace(-1, 999)
+        
+        df_out['contact_cellular_telephone_feat'] = df_out['contact'].isin(['cellular', 'telephone']).astype(int)
+        
+        df_out['housing_feat'] = df_out['housing'].map({'yes': 1, 'no': 0})
+        
+        df_out['job_student_or_retired_feat'] = df_out['job'].isin(['student', 'retired']).astype(int)
+        
+feature_cols = [
+            'duration',
+            'poutcome_success_feat',
+            'month_dec_oct_sep_mar_feat',
+            'pdays_replaced_feat',
+            'contact_cellular_telephone_feat',
+            'housing_feat',
+            'job_student_or_retired_feat'
+        ]
+        
+then we scale duration and pdays_replaced_feat and feed the final X to the model
+save the prediction for each row in y_predicted column in the output dataset
+
+we display first 10 rows of the dataset to the user and also provide a download button where the user can save the whole new dataset with y labels in it
+
