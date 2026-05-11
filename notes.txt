@@ -386,3 +386,14 @@ save the prediction for each row in y_predicted column in the output dataset
 
 we display first 10 rows of the dataset to the user and also provide a download button where the user can save the whole new dataset with y labels in it
 
+-----------------------------
+requirements:
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+lightgbm
+xgboost
+joblib
+streamlit
